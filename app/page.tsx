@@ -1,0 +1,86 @@
+"use client";
+
+import Image from "next/image";
+import { useState } from "react";
+
+const tabs = ["Home", "About", "Notes"] as const;
+type Tab = (typeof tabs)[number];
+
+const tabCopy: Record<Exclude<Tab, "Home">, { eyebrow: string; title: string; body: string }> = {
+  About: {
+    eyebrow: "About this project",
+    title: "Small on purpose.",
+    body: "This is a clean Next.js starting point for trying cloud-agent changes without a lot of setup or existing product complexity.",
+  },
+  Notes: {
+    eyebrow: "A blank canvas",
+    title: "What should we build next?",
+    body: "Try asking an agent to add a photo gallery, a theme switcher, a guestbook, or a new page. This tab is ready to become anything.",
+  },
+};
+
+export default function Home() {
+  const [activeTab, setActiveTab] = useState<Tab>("Home");
+
+  return (
+    <main>
+      <header className="site-header">
+        <button className="brand" type="button" onClick={() => setActiveTab("Home")}>
+          <span className="brand-mark" aria-hidden="true">●</span>
+          Good Day
+        </button>
+
+        <nav className="tabs" aria-label="Main navigation">
+          {tabs.map((tab) => (
+            <button
+              className={activeTab === tab ? "tab active" : "tab"}
+              type="button"
+              key={tab}
+              aria-selected={activeTab === tab}
+              onClick={() => setActiveTab(tab)}
+            >
+              {tab}
+            </button>
+          ))}
+        </nav>
+      </header>
+
+      {activeTab === "Home" ? (
+        <section className="hero" aria-labelledby="hero-title">
+          <p className="eyebrow">A simple Next.js starter</p>
+          <h1 id="hero-title">Here’s a dog.</h1>
+          <p className="intro">
+            A tiny, friendly app made for testing ideas, shipping small changes,
+            and giving a cloud agent somewhere pleasant to start.
+          </p>
+
+          <figure className="dog-card">
+            <Image
+              className="dog-image"
+              src="/dog.png"
+              alt="A happy golden retriever sitting in a sunlit meadow"
+              width={1400}
+              height={1124}
+              priority
+              sizes="(max-width: 720px) 90vw, 620px"
+            />
+            <figcaption>Professional good dog · Available for treats</figcaption>
+          </figure>
+        </section>
+      ) : (
+        <section className="text-panel" aria-live="polite">
+          <p className="eyebrow">{tabCopy[activeTab].eyebrow}</p>
+          <h1>{tabCopy[activeTab].title}</h1>
+          <p className="intro">{tabCopy[activeTab].body}</p>
+          <button className="back-button" type="button" onClick={() => setActiveTab("Home")}>
+            Back to the dog <span aria-hidden="true">→</span>
+          </button>
+        </section>
+      )}
+
+      <footer>
+        Built with Next.js <span aria-hidden="true">·</span> Ready for experiments
+      </footer>
+    </main>
+  );
+}

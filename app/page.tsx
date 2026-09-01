@@ -1,12 +1,16 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
-const tabs = ["Home", "About", "Notes"] as const;
+const tabs = ["Home", "About", "Notes", "Env"] as const;
 type Tab = (typeof tabs)[number];
 
-const tabCopy: Record<Exclude<Tab, "Home">, { eyebrow: string; title: string; body: string }> = {
+// The values behind the Env tab; fetched from /api/env-test because env
+// vars only exist server-side.
+type EnvTest = { injected: string | null; dotenv: string | null; error?: string };
+
+const tabCopy: Record<Exclude<Tab, "Home" | "Env">, { eyebrow: string; title: string; body: string }> = {
   About: {
     eyebrow: "About this project",
     title: "Small on purpose.",
@@ -21,6 +25,16 @@ const tabCopy: Record<Exclude<Tab, "Home">, { eyebrow: string; title: string; bo
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<Tab>("Home");
+  const [envTest, setEnvTest] = useState<EnvTest | null>(null);
+
+  useEffect(() => {
+    if (activeTab !== "Env") return;
+    setEnvTest(null);
+    fetch("/api/env-test")
+      .then((res) => res.json())
+      .then((data: EnvTest) => setEnvTest(data))
+      .catch((error) => setEnvTest({ injected: null, dotenv: null, error: String(error) }));
+  }, [activeTab]);
 
   return (
     <main>
@@ -66,6 +80,36 @@ export default function Home() {
             />
             <figcaption>Professional good dog · Available for treats</figcaption>
           </figure>
+        </section>
+      ) : activeTab === "Env" ? (
+        <section className="text-panel" aria-live="polite">
+          <p className="eyebrow">Environment test</p>
+          <h1>Where did each value come from?</h1>
+          <p className="intro">
+            <code>INJECTED_MESSAGE</code> should arrive through the process
+            environment (an injected repo-environment var);{" "}
+            <code>DOTENV_MESSAGE</code> through a <code>.env</code> file at the
+            repo root, loaded by Next.js at server start.
+          </p>
+          {envTest === null ? (
+            <p className="intro">Loading…</p>
+          ) : envTest.error ? (
+            <p className="intro">Could not reach /api/env-test: {envTest.error}</p>
+          ) : (
+            <ul className="intro" style={{ listStyle: "none", padding: 0 }}>
+              <li>
+                <code>INJECTED_MESSAGE</code> (injected):{" "}
+                <strong>{envTest.injected ?? "(not set)"}</strong>
+              </li>
+              <li>
+                <code>DOTENV_MESSAGE</code> (.env file):{" "}
+                <strong>{envTest.dotenv ?? "(not set)"}</strong>
+              </li>
+            </ul>
+          )}
+          <button className="back-button" type="button" onClick={() => setActiveTab("Home")}>
+            Back to the dog <span aria-hidden="true">→</span>
+          </button>
         </section>
       ) : (
         <section className="text-panel" aria-live="polite">
